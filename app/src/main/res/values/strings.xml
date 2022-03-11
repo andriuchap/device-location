@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">DeviceLocation</string>
+    <string name="location">Last device location was at longitude %f and latitude %f</string>
+    <string name="location_rationale">Location is needed to print the last known location of your device.</string>
+    <string name="location_denied_message">Location permission was denied, the app won\'t be able to print your last known location.</string>
+    <string name="ok">Ok</string>
+    <string name="no_location">Can\'t determine device location.</string>
+</resources>
