@@ -15,11 +15,15 @@ import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
 
-    val requestPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+    // The ActivityResultLauncher to handle our permission result.
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+                isGranted ->
             if (isGranted) {
+                // Permission granted, execute the location code.
                 discoverLocation()
             } else {
+                // Permission denied, explain why the app won't work
                 showDenyMessage()
             }
         }
@@ -27,53 +31,71 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        // Initiates the application's code.
         attemptDiscoverLocation();
     }
 
-    fun attemptDiscoverLocation() {
+    private fun attemptDiscoverLocation() {
         when {
+            // Check if permission is granted.
             ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED -> {
+                // Continue with using the device's location.
                 discoverLocation()
             }
+            // Permission is not granted, should we show rationale?
             ActivityCompat.shouldShowRequestPermissionRationale(
                 this,
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) -> {
+                // Show rationale.
                 showRationale();
             }
             else -> {
-                requestPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+                // Permission not granted, make a request.
+                makeLocationPermissionRequest()
             }
         }
     }
 
-    fun discoverLocation() {
+    private fun discoverLocation() {
+        // Get the location manager service.
         val lm = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        // Retrieve the location, longitude and latitude.
         val location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
         val long = location?.longitude
         val lat = location?.latitude
-
+        // Show longitude and latitude on the screen.
         findViewById<TextView>(R.id.message_text).text =
             String.format(resources.getString(R.string.location), long, lat)
 
     }
 
+    private fun makeLocationPermissionRequest() {
+        // Launch the contract
+        requestPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+    }
+
     private fun showRationale() {
         AlertDialog.Builder(this).setMessage(R.string.location_rationale)
-            .setPositiveButton(R.string.ok) { _, _ ->
-                requestPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+            // The positive button dismisses the dialog.
+            .setPositiveButton(R.string.ok) { dialogInterface, _ ->
+                dialogInterface.dismiss()
+                // Once the dialog is dismissed a request for the permission is called.
+            }.setOnDismissListener {
+                makeLocationPermissionRequest()
             }.show()
     }
 
-    fun showDenyMessage() {
+    private fun showDenyMessage() {
         AlertDialog.Builder(this).setMessage(R.string.location_denied_message)
             .setPositiveButton(R.string.ok) { dialogInterface, _ ->
                 dialogInterface.dismiss()
             }.show()
+        // Set the text of the message informing the user
+        // that the device location can't be determined.
         findViewById<TextView>(R.id.message_text).text = resources.getString(R.string.no_location)
     }
 
